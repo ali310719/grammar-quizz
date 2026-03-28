@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grammar Friend 3 – Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #3b82f6;
+    --indigo: #4f46e5;
+    --green: #16a34a;
+    --red: #dc2626;
+    --card: #ffffff;
+    --text: #1e1b4b;
+    --muted: #6b7280;
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #dbeafe 0%, #ede9fe 55%, #fce7f3 100%);
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 28px 16px 60px;
+    color: var(--text);
+  }
+  header { text-align: center; margin-bottom: 28px; animation: fadeDown .6s ease both; }
+  header .badge {
+    display: inline-block; background: var(--indigo); color: #fff;
+    font-family: 'Fredoka One', cursive; font-size: 12px; letter-spacing: 2px;
+    padding: 4px 16px; border-radius: 99px; margin-bottom: 10px;
+  }
+  header h1 { font-family: 'Fredoka One', cursive; font-size: clamp(26px,6vw,44px); color: var(--indigo); }
+  header p { color: var(--muted); font-size: 14px; margin-top: 5px; font-weight: 600; }
+
+  .progress-label {
+    font-size: 13px; color: var(--indigo); font-weight: 700;
+    margin-bottom: 6px; text-align: right; width: 100%; max-width: 700px;
+  }
+  .progress-bar-wrap {
+    width: 100%; max-width: 700px; background: #e0e7ff;
+    border-radius: 99px; height: 10px; margin-bottom: 20px; overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%; background: linear-gradient(90deg, var(--blue), var(--indigo));
+    border-radius: 99px; transition: width .4s ease;
+  }
+
+  .quiz-card {
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: 0 8px 40px rgba(79,70,229,.13);
+    padding: 30px 26px; width: 100%; max-width: 700px;
+    animation: fadeUp .4s ease both;
+  }
+  .q-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .q-number { font-size: 12px; font-weight: 800; color: var(--indigo); letter-spacing: 1.5px; text-transform: uppercase; }
+  .topic-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 99px; background: #ede9fe; color: var(--indigo); }
+  .format-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 99px; background: #fef3c7; color: #92400e; margin-left: auto; }
+
+  .question-text { font-size: 17px; font-weight: 700; line-height: 1.55; margin-bottom: 20px; }
+  .question-text em { font-style: normal; color: var(--indigo); background: #ede9fe; padding: 0 4px; border-radius: 4px; }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-btn {
+    background: #f8fafc; border: 2.5px solid #e2e8f0; border-radius: 12px;
+    padding: 12px 16px; font-family: 'Nunito', sans-serif;
+    font-size: 15px; font-weight: 700; color: var(--text);
+    cursor: pointer; text-align: left; transition: all .18s;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .option-btn .letter {
+    width: 28px; height: 28px; border-radius: 50%; background: #e0e7ff;
+    color: var(--indigo); font-size: 12px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all .18s;
+  }
+  .option-btn:hover:not(:disabled) { border-color: var(--blue); background: #eff6ff; transform: translateY(-1px); }
+  .option-btn.selected { border-color: var(--indigo); background: #ede9fe; }
+  .option-btn.selected .letter { background: var(--indigo); color: #fff; }
+  .option-btn.correct { background: #dcfce7 !important; border-color: var(--green) !important; }
+  .option-btn.correct .letter { background: var(--green) !important; color: #fff !important; }
+  .option-btn.wrong { background: #fee2e2 !important; border-color: var(--red) !important; }
+  .option-btn.wrong .letter { background: var(--red) !important; color: #fff !important; }
+
+  .fill-wrap { display: flex; flex-direction: column; gap: 8px; }
+  .fill-input {
+    border: 2.5px solid #e2e8f0; border-radius: 12px; padding: 12px 16px;
+    font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 700;
+    color: var(--text); outline: none; transition: border .2s;
+  }
+  .fill-input:focus { border-color: var(--blue); }
+  .fill-input.correct { border-color: var(--green); background: #dcfce7; }
+  .fill-input.wrong   { border-color: var(--red);   background: #fee2e2; }
+  .fill-hint { font-size: 12px; color: var(--muted); font-weight: 600; }
+
+  .feedback { margin-top: 14px; padding: 11px 15px; border-radius: 10px; font-size: 14px; font-weight: 700; display: none; }
+  .feedback.show { display: block; }
+  .feedback.correct { background: #dcfce7; color: #15803d; }
+  .feedback.wrong   { background: #fee2e2; color: #b91c1c; }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 22px; }
+  .btn { padding: 12px 26px; border-radius: 12px; border: none; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; cursor: pointer; transition: all .18s; }
+  .btn-check { background: var(--indigo); color: #fff; flex: 1; }
+  .btn-check:hover:not(:disabled) { background: #4338ca; transform: translateY(-1px); }
+  .btn-check:disabled { opacity: .45; cursor: default; transform: none; }
+  .btn-next { background: var(--blue); color: #fff; flex: 1; display: none; }
+  .btn-next.show { display: block; }
+  .btn-next:hover { background: #2563eb; transform: translateY(-1px); }
+
+  .results {
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: 0 8px 40px rgba(79,70,229,.13);
+    padding: 38px 26px; width: 100%; max-width: 700px;
+    text-align: center; animation: fadeUp .5s ease both; display: none;
+  }
+  .results.show { display: block; }
+  .score-circle {
+    width: 130px; height: 130px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--indigo), var(--blue));
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    margin: 0 auto 18px; box-shadow: 0 8px 30px rgba(79,70,229,.28);
+  }
+  .score-circle .score-num { font-family: 'Fredoka One', cursive; font-size: 46px; color: #fff; line-height: 1; }
+  .score-circle .score-total { font-size: 13px; color: rgba(255,255,255,.8); font-weight: 700; }
+  .results h2 { font-family: 'Fredoka One', cursive; font-size: 28px; color: var(--indigo); margin-bottom: 6px; }
+  .results p { color: var(--muted); font-size: 14px; font-weight: 600; margin-bottom: 22px; }
+  .stars { font-size: 34px; margin-bottom: 14px; }
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 26px; }
+  .summary-item { background: #f8fafc; border-radius: 12px; padding: 13px; }
+  .summary-item .val { font-family: 'Fredoka One', cursive; font-size: 26px; color: var(--indigo); }
+  .summary-item .lbl { font-size: 11px; font-weight: 700; color: var(--muted); }
+  .btn-restart {
+    background: var(--indigo); color: #fff; padding: 13px 38px;
+    border-radius: 12px; border: none; font-family: 'Nunito', sans-serif;
+    font-size: 15px; font-weight: 800; cursor: pointer; transition: all .18s;
+  }
+  .btn-restart:hover { background: #4338ca; transform: translateY(-2px); }
+
+  @keyframes fadeDown { from { opacity:0; transform:translateY(-18px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeUp   { from { opacity:0; transform:translateY(18px);  } to { opacity:1; transform:translateY(0); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">GRAMMAR FRIEND 3</div>
+  <h1>📘 Grammar Quiz</h1>
+  <p>30 questions · All topics mixed · Ages 10–12</p>
+</header>
+
+<div class="progress-label" id="progressLabel">Question 1 of 30</div>
+<div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:3.33%"></div></div>
+
+<div class="quiz-card" id="quizCard">
+  <div class="q-meta">
+    <span class="q-number" id="qNumber">QUESTION 1</span>
+    <span class="topic-tag" id="qTopic"></span>
+    <span class="format-tag" id="qFormat"></span>
+  </div>
+  <div class="question-text" id="qText"></div>
+  <div id="qBody"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="btn-row">
+    <button class="btn btn-check" id="btnCheck" onclick="checkAnswer()" disabled>Check ✓</button>
+    <button class="btn btn-next" id="btnNext" onclick="nextQuestion()">Next →</button>
+  </div>
+</div>
+
+<div class="results" id="results">
+  <div class="score-circle">
+    <div class="score-num" id="scoreNum">0</div>
+    <div class="score-total">out of 30</div>
+  </div>
+  <div class="stars" id="stars"></div>
+  <h2 id="resultTitle"></h2>
+  <p id="resultMsg"></p>
+  <div class="summary-grid">
+    <div class="summary-item"><div class="val" id="correctCount">0</div><div class="lbl">✅ Correct</div></div>
+    <div class="summary-item"><div class="val" id="wrongCount">0</div><div class="lbl">❌ Incorrect</div></div>
+    <div class="summary-item"><div class="val" id="pctVal">0%</div><div class="lbl">Score</div></div>
+    <div class="summary-item"><div class="val" id="gradeVal">-</div><div class="lbl">Grade</div></div>
+  </div>
+  <button class="btn-restart" onclick="restartQuiz()">🔄 Try Again</button>
+</div>
+
+<script>
+const questions = [
+  // 1 Present Simple
+  { topic:"Present Simple", type:"mc",
+    text:"Sarah usually ___ her homework before dinner, but today she forgot.",
+    options:["do","does","is doing","doing"], answer:1 },
+
+  // 2 Present Simple – negative fill
+  { topic:"Present Simple", type:"fill",
+    text:"My parents ___ (not / watch) horror films. They prefer documentaries.",
+    answer:["don't watch","do not watch"], hint:"Negative: don't / doesn't + verb" },
+
+  // 3 Present Simple – question
+  { topic:"Present Simple", type:"mc",
+    text:"___ your sister study at the same school as you?",
+    options:["Is","Are","Do","Does"], answer:3 },
+
+  // 4 Present Continuous – mc
+  { topic:"Present Continuous", type:"mc",
+    text:"The boys ___ football in the garden right now. Can you hear them?",
+    options:["play","plays","are playing","were playing"], answer:2 },
+
+  // 5 Present Continuous – fill
+  { topic:"Present Continuous", type:"fill",
+    text:"Listen! Someone ___ (knock) at the front door.",
+    answer:["is knocking"], hint:"is/am/are + verb-ing" },
+
+  // 6 Present Simple vs Continuous
+  { topic:"Pres. Simple vs Continuous", type:"mc",
+    text:"Which sentence uses the CORRECT tense for a habitual action?",
+    options:["She is listening to music every morning.","She listens to music every morning.","She was listening to music every morning.","She has listened to music every morning."], answer:1 },
+
+  // 7 Past Simple – regular fill
+  { topic:"Past Simple", type:"fill",
+    text:"We ___ (arrive) at the hotel very late last night.",
+    answer:["arrived"], hint:"Regular past tense: add -ed" },
+
+  // 8 Past Simple – irregular mc
+  { topic:"Past Simple", type:"mc",
+    text:"The class ___ a documentary about the rainforest last Friday.",
+    options:["watch","watched","seen","saw"], answer:3 },
+
+  // 9 Past Simple – negative
+  { topic:"Past Simple", type:"mc",
+    text:"He ___ finish his science project on time because he was ill.",
+    options:["doesn't","didn't","wasn't","don't"], answer:1 },
+
+  // 10 Past Simple – question fill
+  { topic:"Past Simple", type:"fill",
+    text:"___ you ___ (see) the match on Saturday? Write: Did … see",
+    answer:["did … see","did you see"], hint:"Question form with Did" },
+
+  // 11 Verb to be – past singular
+  { topic:"Verb to be – Past", type:"mc",
+    text:"The weather ___ awful yesterday, so we decided to stay inside.",
+    options:["is","are","was","were"], answer:2 },
+
+  // 12 Verb to be – past plural fill
+  { topic:"Verb to be – Past", type:"fill",
+    text:"The books on the shelf ___ (be) very old and covered in dust.",
+    answer:["were"], hint:"Past of 'to be' with a plural subject" },
+
+  // 13 Articles – a/an (silent h)
+  { topic:"Articles", type:"mc",
+    text:"There is ___ hour-long documentary about space on TV tonight.",
+    options:["a","an","the","—"], answer:1 },
+
+  // 14 Articles – the (unique places)
+  { topic:"Articles", type:"mc",
+    text:"We visited ___ Eiffel Tower when we went to Paris last summer.",
+    options:["a","an","the","—"], answer:2 },
+
+  // 15 Articles – zero article fill
+  { topic:"Articles", type:"fill",
+    text:"She loves ___ music, especially jazz. (Use — if no article is needed)",
+    answer:["—","no article",""], hint:"General likes use zero article" },
+
+  // 16 Countable / Uncountable
+  { topic:"Countable & Uncountable", type:"mc",
+    text:"We need ___ milk and ___ eggs for the recipe.",
+    options:["some / some","a / an","an / a","some / any"], answer:0 },
+
+  // 17 Plurals – irregular fill
+  { topic:"Plurals", type:"fill",
+    text:"There are five ___ (mouse) living behind the old library wall.",
+    answer:["mice"], hint:"Irregular plural – not mouses!" },
+
+  // 18 There is / There are
+  { topic:"There is / There are", type:"mc",
+    text:"___ any sandwiches left in the box?",
+    options:["Is there","Are there","There is","There are"], answer:1 },
+
+  // 19 There was / There were – fill
+  { topic:"There was / There were", type:"fill",
+    text:"___ a huge storm last night. Many trees fell down.",
+    answer:["there was","There was"], hint:"Past form, singular subject" },
+
+  // 20 Comparative adjectives
+  { topic:"Comparative Adjectives", type:"mc",
+    text:"The Amazon River carries ___ water than the Nile.",
+    options:["more","much","lot more","most"], answer:0 },
+
+  // 21 Superlative adjectives – fill
+  { topic:"Superlative Adjectives", type:"fill",
+    text:"Mount Everest is ___ (high) mountain in the world.",
+    answer:["the highest"], hint:"Use 'the' + adjective + -est" },
+
+  // 22 Irregular comparative
+  { topic:"Comparative Adjectives", type:"mc",
+    text:"My new phone has ___ battery life than my old one.",
+    options:["gooder","more good","better","best"], answer:2 },
+
+  // 23 Pronouns – object
+  { topic:"Pronouns", type:"mc",
+    text:"I forgot my pen. Could you lend ___ yours for a moment?",
+    options:["I","me","my","mine"], answer:1 },
+
+  // 24 Possessive pronouns – fill
+  { topic:"Pronouns", type:"fill",
+    text:"That red bike isn't Jack's — it's ___. (belonging to her)",
+    answer:["hers"], hint:"Possessive pronoun – no noun follows it" },
+
+  // 25 Prepositions of time
+  { topic:"Prepositions of Time", type:"mc",
+    text:"School starts ___ September and the summer holiday begins ___ July.",
+    options:["at / at","in / in","on / on","at / in"], answer:1 },
+
+  // 26 Prepositions of place – fill
+  { topic:"Prepositions of Place", type:"fill",
+    text:"The pharmacy is ___ the supermarket and the post office.",
+    answer:["between"], hint:"Think: X ___ A and B" },
+
+  // 27 Can / Could – past ability
+  { topic:"Can / Could", type:"mc",
+    text:"When my grandfather was young, he ___ speak four languages fluently.",
+    options:["can","could","is able","will be able to"], answer:1 },
+
+  // 28 Have got – question fill
+  { topic:"Have got", type:"fill",
+    text:"___ your teacher ___ a laptop? Write: Has … got",
+    answer:["has … got","has your teacher got"], hint:"Question form of have got" },
+
+  // 29 Adverbs of frequency
+  { topic:"Adverbs of Frequency", type:"mc",
+    text:"He is ___ late for school. His teacher is getting very frustrated.",
+    options:["never","always","hardly ever","rarely"], answer:1 },
+
+  // 30 Error correction
+  { topic:"Error Correction", type:"mc",
+    text:"Find the grammar mistake: 'Yesterday we didn't went to the cinema because it was closed.'",
+    options:["'Yesterday' should be 'Last day'","'didn't went' should be 'didn't go'","'closed' should be 'close'","There is no mistake"], answer:1 },
+];
+
+let current = 0, score = 0, answered = false;
+
+function renderQuestion() {
+  answered = false;
+  const q = questions[current];
+  document.getElementById('qNumber').textContent = `QUESTION ${current + 1}`;
+  document.getElementById('qTopic').textContent = q.topic;
+  document.getElementById('qFormat').textContent = q.type === 'mc' ? '🔘 Multiple Choice' : '✏️ Fill in the Blank';
+  document.getElementById('qText').innerHTML = q.text.replace(/___+/g, s => `<em>${'_'.repeat(s.length)}</em>`);
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('btnCheck').disabled = true;
+  document.getElementById('btnCheck').style.display = '';
+  document.getElementById('btnNext').className = 'btn btn-next';
+
+  const pct = ((current + 1) / 30 * 100).toFixed(2);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent = `Question ${current + 1} of 30`;
+
+  const body = document.getElementById('qBody');
+  body.innerHTML = '';
+
+  if (q.type === 'mc') {
+    const wrap = document.createElement('div');
+    wrap.className = 'options';
+    ['A','B','C','D'].forEach((ltr, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.dataset.index = i;
+      btn.innerHTML = `<span class="letter">${ltr}</span>${q.options[i]}`;
+      btn.onclick = () => selectOption(btn);
+      wrap.appendChild(btn);
+    });
+    body.appendChild(wrap);
+  } else {
+    const wrap = document.createElement('div');
+    wrap.className = 'fill-wrap';
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.className = 'fill-input'; inp.id = 'fillInput';
+    inp.placeholder = 'Type your answer here…';
+    inp.oninput = () => { document.getElementById('btnCheck').disabled = inp.value.trim() === ''; };
+    inp.onkeydown = e => { if (e.key === 'Enter' && !answered && inp.value.trim()) checkAnswer(); };
+    wrap.appendChild(inp);
+    if (q.hint) {
+      const h = document.createElement('div');
+      h.className = 'fill-hint';
+      h.textContent = '💡 ' + q.hint;
+      wrap.appendChild(h);
+    }
+    body.appendChild(wrap);
+  }
+}
+
+function selectOption(btn) {
+  if (answered) return;
+  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('btnCheck').disabled = false;
+}
+
+function checkAnswer() {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  const fb = document.getElementById('feedback');
+
+  if (q.type === 'mc') {
+    const sel = document.querySelector('.option-btn.selected');
+    if (!sel) return;
+    const idx = parseInt(sel.dataset.index);
+    document.querySelectorAll('.option-btn').forEach(b => { b.disabled = true; b.classList.remove('selected'); });
+    document.querySelector(`.option-btn[data-index="${q.answer}"]`).classList.add('correct');
+    if (idx === q.answer) {
+      score++;
+      fb.className = 'feedback correct show';
+      fb.textContent = '✅ Correct! Well done!';
+    } else {
+      sel.classList.add('wrong');
+      fb.className = 'feedback wrong show';
+      fb.textContent = `❌ Not quite. The correct answer is: "${q.options[q.answer]}"`;
+    }
+  } else {
+    const inp = document.getElementById('fillInput');
+    const val = inp.value.trim().toLowerCase().replace(/\s+/g,' ');
+    const accepted = q.answer.map(a => a.toLowerCase().replace(/\s+/g,' '));
+    inp.disabled = true;
+    if (accepted.includes(val)) {
+      score++;
+      inp.classList.add('correct');
+      fb.className = 'feedback correct show';
+      fb.textContent = '✅ Correct! Well done!';
+    } else {
+      inp.classList.add('wrong');
+      fb.className = 'feedback wrong show';
+      fb.textContent = `❌ Not quite. The correct answer is: "${q.answer[0]}"`;
+    }
+  }
+
+  document.getElementById('btnCheck').style.display = 'none';
+  document.getElementById('btnNext').className = 'btn btn-next show';
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) { showResults(); return
